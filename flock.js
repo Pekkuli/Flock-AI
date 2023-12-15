@@ -1,12 +1,18 @@
 let width = 300;
 let height = 300;
 
+//Simulation parameters
 var stop = false;
-var interval = 1000 / 60;
+var interval = 1000 / 60;  // (ms per second) / (wanted fps)
 var lastFrame, then, elapsed;
-
 let numbBirbs = 100;
+
+//Birb parameters
 let visualRange = 100;
+let max_speed = 10;
+let turn_speed = 1;
+let sim_boundary = 100;
+let flocking_factor = 0.005;
 
 var firstClick = [null,null];
 var flock = [];
@@ -20,20 +26,7 @@ function resizeCanvas() {
     canvas.height = window.innerHeight;
 }
 
-
-function initBirbs() {
-    for (var i = 0; i < numbBirbs; i += 1) {
-      flock[flock.length] = {
-        x: Math.random() * width,
-        y: Math.random() * height,
-        dx: Math.random() * 10 - 5,
-        dy: Math.random() * 10 - 5,
-        history: [],
-      };
-    }
-  }
-
-  function calcDist(x1, y1, x2, y2) {
+function calcDist(x1, y1, x2, y2) {
     let a = x1 - x2;
     let b = y1 - y2;
     return Math.sqrt( a*a + b*b );
@@ -102,7 +95,6 @@ function handleMouseClick(event, amount) {
         drawLine(firstClick[0],firstClick[1],x,y)
     } */
 }
-
 function calcDist(x1, y1, x2, y2) {
     let a = x1 - x2;
     let b = y1 - y2;
@@ -114,53 +106,97 @@ function calcDist(Birb1, Birb2) {
     let b = Birb1.y - Birb2.y;
     return Math.sqrt( a*a + b*b );
 }
-/* function drawLine(x1, y1, x2, y2) {
-    const canvas = document.querySelector('canvas');
-        
-    if (!canvas.getContext) {
-        return;
+
+function flockWithOthers(Birb) {
+
+    let flockX = 0;
+    let flockY = 0;
+    let localFlockSize = 0;
+
+    for(let otherBirb of flock) {
+        if (calcDist(Birb, otherBirb) < visualRange) {
+            flockX += otherBirb.x;
+            flockY += otherBirb.y;
+            localFlockSize++;
+        }
     }
-    const ctx = canvas.getContext('2d');
 
-    ctx.strokeStyle = 'red';
-    ctx.fillStyle = "red";
-    ctx.lineWidth = 5;
+    if (localFlockSize) {
+        flockX = flockX / localFlockSize;
+        flockY = flockY / localFlockSize;
 
-    console.log(`Drawing line from (${x1},${y1}) to (${x2},${y2})`)
-    ctx.beginPath();
-    ctx.moveTo(x1, y1);
-    ctx.lineTo(x2, y2);
-    ctx.stroke();
-    ctx.closePath();
-} */
+        Birb.dx += (flockX - Birb.x) * flocking_factor;
+        Birb.dy += (flockY - Birb.y) * flocking_factor;
+    }
 
-function spawnBirb(x, y) {
-    let Birb = document.createElement('div');
-    Birb.className = "Birb";
-    Birb.style.left = x + "px";
-    Birb.style.top = y + "px";
-    document.body.appendChild(Birb);
+
 }
+
+function avoidBirbs(Birb) {
+
+}
+
+function matchSpeed(Birb) {
+
+}
+
+function limitSpeed(Birb) {
+    const speed = Math.sqrt(Birb.dx**2+Birb.dy**2);
+    if (speed > max_speed) {
+        Birb.dx = (Birb.dx / speed) * max_speed;
+        Birb.dy = (Birb.dy / speed) * max_speed;
+    }
+}
+
+function keepInsideBoundary(Birb) {
+    if (Birb.x < sim_boundary){
+        Birb.dx += turn_speed;
+    }
+    if (Birb.x > width - sim_boundary){
+        Birb.dx -= turn_speed;
+    }
+
+    if (Birb.y < sim_boundary){
+        Birb.dy += turn_speed;
+    }
+    if (Birb.y > height - sim_boundary){
+        Birb.dy -= turn_speed;
+    }
+}
+
+
+// function spawnBirb(x, y) {
+//     let Birb = document.createElement('div');
+//     Birb.className = "Birb";
+//     Birb.style.left = x + "px";
+//     Birb.style.top = y + "px";
+//     document.body.appendChild(Birb);
+// }
 
 function spawnBirbs(amount) {
     console.log(`Spawning Birbs! (${amount})`)
 
     for (let i = 0; i < amount;i++){
-        let x = Math.floor(Math.random() * width)
+        /* let x = Math.floor(Math.random() * width)
         let y = Math.floor(Math.random() * height)
-        spawnBirb(x, y)
+        spawnBirb(x, y) */
+        flock[flock.length] = {
+            x: Math.random() * width,
+            y: Math.random() * height,
+            dx: Math.random() * 2 * max_speed - max_speed,
+            dy: Math.random() * 2 * max_speed - max_speed,
+            past_pos: [],
+        };
     }
 }
 
 function advanceBirbs() {
-    console.log("Advancing Birbs!");
     let Birbs = document.getElementsByClassName("Birb")
 
     if(Birbs.length == 0) {
         this.stop = true;
         console.log("stopping timer!");
     } else {
-        console.log("Moving Birbs!");
         for (let Birb of Birbs) {
             creepOnClick(Birb)
         }
@@ -202,42 +238,67 @@ function startSim(amount) {
     simulateLoop()
 }
 
-function drawBirb() {
+function drawBirb(ctx, Birb) {
+    const a = Math.atan2(Birb.dy, Birb.dx);
 
+    //Moving / rotating canvas with birb in the center 
+    ctx.translate(Birb.x, Birb.y);
+    ctx.rotate(a);
+    ctx.translate(-Birb.x, -Birb.y);
+    
+    //Drwawing birb
+    ctx.fillStyle = "#978832";
+    ctx.beginPath();
+    ctx.moveTo(Birb.x, Birb.y);
+    ctx.lineTo(Birb.x - 15, Birb.y + 5);
+    ctx.lineTo(Birb.x - 15, Birb.y - 5);
+    ctx.lineTo(Birb.x, Birb.y);
+    ctx.fill();
+    
+    //Reseting canvas
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 
 function simulateLoop() {
 
+    //Stop simulation if stop true
     if (stop) {
         return;
     }
-
-    // teletubbies.meme
     now = window.performance.now()
     elapsed = now - then;
-    
+
     if (elapsed > interval) {
         then = now - (elapsed - interval);
         
-        advanceBirbs()
+        //advanceBirbs()
 
         for (let Birb of flock) {
             // fly towards other Birbs
+            flockWithOthers(Birb);
             // avoid others
+
             // metch speed
+            
             // no speeding
+            limitSpeed(Birb);
             // keep inside window
-    
+            keepInsideBoundary(Birb);
             // update pos
+            Birb.x += Birb.dx;
+            Birb.y += Birb.dy;
+
         }
         // clear canvas
         const ctx = document.getElementById("container").getContext("2d");
         ctx.clearRect(0, 0, width, height);
         // draw Birbs
         for(let Birb of flock){
-            // drawBird()
+            drawBirb(ctx, Birb);
+            
         }
     }
+    // teletubbies.meme
     requestAnimationFrame(simulateLoop)
 }
 
