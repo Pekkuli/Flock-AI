@@ -7,14 +7,14 @@ var interval = 1000 / 60;  //   (ms per second)/(wanted fps) --> framerate is ei
 var lastFrame, then, elapsed;
 var showRange = false, showTrail = true;
 let numbBirbs = 150;
-let numPredators = 3;
+let numPredators = 1;
 
 //Birb parameters
 let visualRange = 75;
 let max_speed = 10;
 let turn_speed = 2;
 let min_distance = 25;
-let flocking_factor = 0.01;
+let flocking_factor = 0.005;
 let matching_factor = 0.05;
 let avoid_factor = 0.05;
 
@@ -23,7 +23,7 @@ let predator_visualRange = 100;
 let predator_max_speed = 9.5;
 let chasing_factor = 0.15;
 let predator_eat_range = 10;
-let predator_min_distance = 25;
+let predator_min_distance = 35;
 let predator_avoid_factor = 0.1;
 
 var firstClick = [null,null];
@@ -120,35 +120,56 @@ function limitSpeed(birb) {
     }
 }
 
-function keepInsideBoundary(Birb) {
-    if (Birb.x < sim_boundary){
-        if (Birb.x < 0) {
-            Birb.dx += turn_speed * 10;
+function keepInsideBoundary(birb) {
+    if (birb.x < sim_boundary){
+        if (birb.x < 0) {
+            birb.dx += turn_speed * 10;
         } else {
-            Birb.dx += turn_speed;
+            birb.dx += turn_speed;
         }
     }
-    if (Birb.x > width - sim_boundary){
-        if (Birb.x > width) {
-            Birb.dx -= turn_speed * 10;
+    if (birb.x > width - sim_boundary){
+        if (birb.x > width) {
+            birb.dx -= turn_speed * 10;
         } else {
-            Birb.dx -= turn_speed;
+            birb.dx -= turn_speed;
         }
     }
 
-    if (Birb.y < sim_boundary){
-        if (Birb.y < 0) {
-            Birb.dy += turn_speed * 10;
+    if (birb.y < sim_boundary){
+        if (birb.y < 0) {
+            birb.dy += turn_speed * 10;
         } else {
-            Birb.dy += turn_speed;
+            birb.dy += turn_speed;
         }
     }
-    if (Birb.y > height - sim_boundary){
-        if (Birb.y > width) {
-            Birb.dy -= turn_speed * 10;
+    if (birb.y > height - sim_boundary){
+        if (birb.y > width) {
+            birb.dy -= turn_speed * 10;
         } else {
-            Birb.dy -= turn_speed;
+            birb.dy -= turn_speed;
         }
+    }
+}
+
+function outOfBoundary (birb) {
+    let yes = false;
+    if (birb.x < 0) {
+        yes = true;
+    }
+    if (birb.x > width){
+        yes = true;
+    }
+    if (birb.y < 0) {
+        yes = true;
+    }
+    if (birb.y > width) {
+        yes = true;
+    }
+    if (yes) {
+        console.log("Out of Boundary!")
+        console.log(`pos:   (${birb.x},${birb.y})`)
+        console.log(`speed: (${birb.dx},${birb.dy})`)
     }
 }
 
@@ -342,6 +363,7 @@ function simulateLoop() {
             birb.trail.push([birb.x, birb.y]);
             // keep trail at last 50 steps
             birb.trail = birb.trail.slice(-50);
+            outOfBoundary (birb);
         }
 
         // Predator logic if predators exist
@@ -356,6 +378,7 @@ function simulateLoop() {
                 predator.y += predator.dy;
                 predator.trail.push([predator.x, predator.y]);
                 predator.trail = predator.trail.slice(-50);
+                outOfBoundary (predator);
             }
         }
 
