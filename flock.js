@@ -5,21 +5,21 @@ let sim_boundary = 75;
 var stop = false;
 var interval = 1000 / 60;  //   (ms per second)/(wanted fps) --> framerate is either fps or screen refresh rate which ever is smaller
 var lastFrame, then, elapsed;
-var showRange = false, showTrail = true;
+var showRange = false, showTrail = false;
 let numbBirbs = 150;
-let numPredators = 1;
+let numPredators = 0;
 
 //Birb parameters
-let visualRange = 75;
+let visual_range = 100;
 let max_speed = 10;
-let turn_speed = 2;
-let min_distance = 25;
+let turn_speed = 1;
+let min_distance = 20;
 let flocking_factor = 0.005;
-let matching_factor = 0.05;
+let uniformity_factor = 0.05;
 let avoid_factor = 0.05;
 
 //Predator parameters
-let predator_visualRange = 100;
+let predator_visual_range = 100;
 let predator_max_speed = 9.5;
 let chasing_factor = 0.15;
 let predator_eat_range = 10;
@@ -35,8 +35,57 @@ function resizeCanvas() {
     const canvas = document.getElementById("container")
     width = window.innerWidth;
     height = window.innerHeight;
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    canvas.width = width;
+    canvas.height = height;
+}
+
+function setFlocking(value) {
+    flocking_factor = value;
+    document.getElementById("flocking_range").value = value;
+}
+
+function setDistance(value){
+    avoid_factor = value;
+    document.getElementById("distance_range").value = value;
+}
+
+function setUniformity(value) {
+    uniformity_factor = value;
+    document.getElementById("uniformity_range").value = value;
+}
+
+function setVisualRange(value) {
+    visual_range = value;
+    document.getElementById("visual_range").value = value;
+}
+
+function toggleSlider(slider) {
+    visual_range = value;
+    let button = document.getElementById("visual_range_button");
+    if (button.value == "OFF") {
+        button.value = "ON"
+        document.getElementById("visual_range").value = value;
+    } else {
+        button.value = "OFF"
+        document.getElementById("visual_range_slider").reset();
+        visual_range = document.getElementById("visual_range").value;
+    }
+}
+
+function toggleTrail() {
+    if (document.getElementById("trail_box").checked == true) {
+        showTrail = true;
+    } else {
+        showTrail = false;
+    }
+}
+
+function toggleVisualRange() {
+    if (document.getElementById("visual_range_box").checked == true) {
+        showRange = true;
+    } else {
+        showRange = false;
+    }
 }
 
 function calcDist(birb1, birb2) {
@@ -57,7 +106,7 @@ function getLocalFlock(birb, flock) {
     let localFlockSize = 0;
 
     for(let otherBirb of flock) {
-        if (calcDist(birb, otherBirb) < birb.visual_range) {
+        if (calcDist(birb, otherBirb) < visual_range) {
             // get sums of birb x,y coordinates and dx, dy values inside visual range
             avg_x += otherBirb.x;
             avg_dx += otherBirb.dx;
@@ -65,7 +114,7 @@ function getLocalFlock(birb, flock) {
             avg_dy += otherBirb.dy;
             // if other birbs inside avoid sphere, get sum of the difference in position
             if(otherBirb != birb) {
-                if(calcDist(birb, otherBirb) < birb.min_distance) {
+                if(calcDist(birb, otherBirb) < min_distance) {
                     avoid_x += birb.x - otherBirb.x;
                     avoid_y += birb.y - otherBirb.y;
                 }
@@ -89,17 +138,24 @@ function flockWithOthers(flock, birb) {
 
 }
 
-function avoidOthers(flock, birb) {
+function avoidOtherBirbs(flock, birb) {
     if (flock.size > 1) {
-        birb.dx += flock.avoid_x * birb.avoid_factor;
-        birb.dy += flock.avoid_y * birb.avoid_factor;
+        birb.dx += flock.avoid_x * avoid_factor;
+        birb.dy += flock.avoid_y * avoid_factor;
+    }
+}
+
+function avoidOtherPredators(pack, predator) {
+    if (flock.size > 1) {
+        predator.dx += pack.avoid_x * predator_avoid_factor;
+        predator.dy += pack.avoid_y * predator_avoid_factor;
     }
 }
 
 function matchSpeed(flock, birb) {
     if (flock.size) {
-        birb.dx += (flock.dx - birb.dx) * matching_factor;
-        birb.dy += (flock.dy - birb.dy) * matching_factor;
+        birb.dx += (flock.dx - birb.dx) * uniformity_factor;
+        birb.dy += (flock.dy - birb.dy) * uniformity_factor;
     }
 }
 
@@ -112,11 +168,19 @@ function avoidPredators(birb) {
     }
 }
 
-function limitSpeed(birb) {
+function limitSpeedBirb(birb) {
     const speed = Math.sqrt(birb.dx**2+birb.dy**2);
-    if (speed > birb.max_speed) {
-        birb.dx = (birb.dx / speed) * birb.max_speed;
-        birb.dy = (birb.dy / speed) * birb.max_speed;
+    if (speed > max_speed) {
+        birb.dx = (birb.dx / speed) * max_speed;
+        birb.dy = (birb.dy / speed) * max_speed;
+    }
+}
+
+function limitSpeedPredator(birb) {
+    const speed = Math.sqrt(birb.dx**2+birb.dy**2);
+    if (speed > predator_max_speed) {
+        birb.dx = (birb.dx / speed) * predator_max_speed;
+        birb.dy = (birb.dy / speed) * predator_max_speed;
     }
 }
 
@@ -166,7 +230,7 @@ function outOfBoundary (birb) {
     if (birb.y > width) {
         yes = true;
     }
-    if (yes) {
+    if (false) {
         console.log("Out of Boundary!")
         console.log(`pos:   (${birb.x},${birb.y})`)
         console.log(`speed: (${birb.dx},${birb.dy})`)
@@ -178,14 +242,10 @@ function spawnBirbs() {
 
     for (let i = 0; i < numbBirbs;i++){
         globalFlock[globalFlock.length] = {
-            x: Math.random() * width,
-            y: Math.random() * height,
+            x: Math.random() * 2 * width - 0.5 * width,
+            y: Math.random() * 2 * height - 0.5 * height,
             dx: Math.random() * 2 * max_speed - max_speed,
             dy: Math.random() * 2 * max_speed - max_speed,
-            max_speed: max_speed,
-            avoid_factor: avoid_factor,
-            min_distance: min_distance,
-            visual_range: visualRange,
             trail: [],
         };
     }
@@ -200,10 +260,6 @@ function spawnPredators() {
                 y: Math.random() * height,
                 dx: Math.random() * 2 * predator_max_speed - predator_max_speed,
                 dy: Math.random() * 2 * predator_max_speed - predator_max_speed,
-                max_speed: predator_max_speed,
-                avoid_factor: predator_avoid_factor,
-                min_distance: predator_min_distance,
-                visual_range: predator_visualRange,
                 trail: [],
             };
         }
@@ -214,7 +270,7 @@ function chaseBirbs(predator) {
     let dist = 999999;
     let closestBirb = null;
     for(let birb of globalFlock) {
-        if (calcDist(predator, birb) < predator_visualRange) {
+        if (calcDist(predator, birb) < predator_visual_range) {
             if (calcDist(predator, birb) < dist) {
                 closestBirb = birb;
                 dist = calcDist(predator, birb);
@@ -260,7 +316,7 @@ function drawBirb(ctx, birb) {
     if(showRange) {
         ctx.beginPath();
         ctx.strokeStyle = "Black";
-        ctx.arc(birb.x, birb.y, visualRange, 0, 2 * Math.PI)
+        ctx.arc(birb.x, birb.y, visual_range, 0, 2 * Math.PI)
         ctx.stroke();
         ctx.closePath();
     }
@@ -301,7 +357,7 @@ function drawPredator(ctx, predator) {
     ctx.closePath();
     if(showRange) {
         ctx.beginPath();
-        ctx.arc(predator.x, predator.y, predator_visualRange, 0, 2 * Math.PI)
+        ctx.arc(predator.x, predator.y, predator_visual_range, 0, 2 * Math.PI)
         ctx.stroke();
         ctx.closePath();
         ctx.beginPath();
@@ -347,13 +403,13 @@ function simulateLoop() {
             // fly towards other Birbs
             flockWithOthers(flock, birb);
             // avoid others
-            avoidOthers(flock, birb);
+            avoidOtherBirbs(flock, birb);
             // metch speed
             matchSpeed(flock, birb);
             // avoid predators?
             avoidPredators(birb);
             // no speeding
-            limitSpeed(birb);
+            limitSpeedBirb(birb);
             // keep inside window
             keepInsideBoundary(birb);
             // update pos
@@ -363,7 +419,7 @@ function simulateLoop() {
             birb.trail.push([birb.x, birb.y]);
             // keep trail at last 50 steps
             birb.trail = birb.trail.slice(-50);
-            outOfBoundary (birb);
+            //outOfBoundary (birb);
         }
 
         // Predator logic if predators exist
@@ -371,14 +427,14 @@ function simulateLoop() {
             for (let predator of predator_pack) {
                 let pack = getLocalFlock(predator, predator_pack);
                 chaseBirbs(predator);
-                avoidOthers(pack, predator);
-                limitSpeed(predator);
+                avoidOtherPredators(pack, predator);
+                limitSpeedPredator(predator);
                 keepInsideBoundary(predator);
                 predator.x += predator.dx;
                 predator.y += predator.dy;
                 predator.trail.push([predator.x, predator.y]);
                 predator.trail = predator.trail.slice(-50);
-                outOfBoundary (predator);
+                //outOfBoundary (predator);
             }
         }
 
