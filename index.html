@@ -11,61 +11,75 @@
   </style>
 </head>
 <script src="./flock.js" type="text/javascript"></script>
+
 <body>
   <canvas id="container" onclick = startSim();></canvas>
+  <div style="display:none;">
+    <img id="unicorn" src="resources/images/unicorn.png" width="26" height="28" />
+  </div>
+  <div class ="toolbar" >
+    
+    <div class="toolbar_title" onclick="toggle_toolbar()">
+        ===
+    </div>
+    <div class="div_row">
+        <div>
+            <form id="flocking_slider">
+                <label for="flocking_range">Swarming</label>
+                <input type="range" id="flocking_range" name="flocking_range" min="0" max ="0.01" value="0.005" step="0.001" list = "flocking_marker" oninput="setFlocking(this.value)">
+                <datalist id="flocking_marker"><option value="0.005"></option></datalist>
+            </form>
+            <input type="button" id="flocking_button" class="button" onclick="setFlocking(0)" value="OFF">
+        </div>
+        <div>
+            <form id="distance_slider">
+                <label for="distance_range">Separation</label>
+                <input type="range" id="distance_range" name="distance_range" min="0" max ="0.01" value="0.005" step="0.001" list = "distance_marker" oninput="setDistance(this.value)">
+                <datalist id="distance_marker"><option value="0.005"></option></datalist>
+            </form>
+            <input type="button" id="distance_button" class="button" onclick="setDistance(0)" value="OFF">
+        </div>
+        <div>
+            <form id="uniformity_slider">
+                <label for="uniformity_range">Uniformity</label>
+                <input type="range" id="uniformity_range" name="uniformity_range" min="0" max ="0.1" value="0.05" step="0.01" list = "uniformity_marker" oninput="setUniformity(this.value)">
+                <datalist id="uniformity_marker"><option value="0.05"></option></datalist>
+            </form>
+            <input type="button" id="uniformity_button" class="button" onclick="setUniformity(0)" value="OFF">
+        </div>
+        <div>
+            <form id="visual_range_slider">
+                <label for="visual_range">Visual range</label>
+                <input type="range" id="visual_range" name="visual_range" min="0" max ="200" value="75" step="5" list = "visual_marker" oninput="setVisualRange(this.value)">
+                <datalist id="visual_marker"><option value="75"></option></datalist>
+            </form>
+            <input type="button" id="visual_range_button" class="button" onclick="setVisualRange(0)" value="OFF">
+        </div>
 
-  <div id ="toolbar" >
-    <div class="grid_div">
-        <form id="flocking_slider">
-            <label for="flocking_range">Swarming</label>
-            <input type="range" id="flocking_range" name="flocking_range" min="0" max ="0.01" value="0.005" step="0.001" list = "flocking_marker" oninput="setFlocking(this.value)">
-            <datalist id="flocking_marker"><option value="0.005"></option></datalist>
-        </form>
-        <input type="button" id="flocking_button" class="button" onclick="setFlocking(0)" value="OFF">
+        <div>
+            <p>Show trail</p>
+        </div>
+        <div>
+            <form id="trail_box_form">
+                <label  class="switch">
+                    <input id="trail_box" type="checkbox" onclick="toggleTrail()">
+                    <span class="slider round"></span>
+                </label>
+            </form>
+        </div>
+        <div>
+            <p>Show visual range</p>
+        </div>
+        <div>
+            <form id="visual_range_box_form">
+                <label  class="switch">
+                    <input id="visual_range_box" type="checkbox"  onclick="toggleVisualRange()">
+                    <span class="slider round"></span>
+                </label>
+            </form>
+        </div>
     </div>
     
-    <div class="grid_div">
-        <form id="distance_slider">
-            <label for="distance_range">Separation</label>
-            <input type="range" id="distance_range" name="distance_range" min="0" max ="0.01" value="0.005" step="0.001" list = "distance_marker" oninput="setDistance(this.value)">
-            <datalist id="distance_marker"><option value="0.005"></option></datalist>
-        </form>
-        <input type="button" id="distance_button" class="button" onclick="setDistance(0)" value="OFF">
-    </div>
-    <div class="grid_div">
-        <form id="uniformity_slider">
-            <label for="uniformity_range">Uniformity</label>
-            <input type="range" id="uniformity_range" name="uniformity_range" min="0" max ="0.1" value="0.05" step="0.01" list = "uniformity_marker" oninput="setUniformity(this.value)">
-            <datalist id="uniformity_marker"><option value="0.05"></option></datalist>
-        </form>
-        <input type="button" id="uniformity_button" class="button" onclick="setUniformity(0)" value="OFF">
-    </div>
-    <div class="grid_div">
-        <form id="visual_range_slider">
-            <label for="visual_range">Visual range</label>
-            <input type="range" id="visual_range" name="visual_range" min="0" max ="200" value="75" step="5" list = "visual_marker" oninput="setVisualRange(this.value)">
-            <datalist id="visual_marker"><option value="75"></option></datalist>
-        </form>
-        <input type="button" id="visual_range_button" class="button" onclick="setVisualRange(0)" value="OFF">
-    </div>
-    <div class="grid_div">
-        <p>Show trail</p>
-    </div>
-    <div class="grid_div">
-        <label  class="switch">
-            <input id="trail_box" type="checkbox" onclick="toggleTrail()">
-            <span class="slider round"></span>
-        </label>
-    </div>
-    <div class="grid_div">
-        <p>Show visual range</p>
-    </div>
-    <div class="grid_div">
-        <label  class="switch">
-            <input id="visual_range_box" type="checkbox"  onclick="toggleVisualRange()">
-            <span class="slider round"></span>
-        </label>
-    </div>
   </div>
 
 

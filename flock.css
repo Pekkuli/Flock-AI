@@ -14,23 +14,34 @@ canvas {
 	/* z-index: 1; */
 }
 
-#toolbar {
+.toolbar {
 	border: 3px solid rgb(153, 201, 255);
 	border-radius: 8px;
 	background: rgba(63, 72, 90, 0.6);
-	display: grid;
-	grid-template-columns: 140px 140px 140px 140px;
-	grid-gap: 10px;
+	
 	position: fixed;
 	left: 50%;
 	bottom: 0px;
 	transform: translate(-50%, 0%);
 	user-select: none;
+	text-align: center;
 }
 
-.grid_div {
-	text-align: center;
-	padding: 2px;
+.toolbar_title{
+	margin: 0;
+	font-weight: bold;
+	color: rgb(51, 146, 255);
+}
+
+.div_row {
+	display: grid;
+	grid-template-columns: 140px 140px 140px 140px;
+	grid-gap: 10px;
+	transition: all 0.1s
+}
+.div_row.active{
+	transform : scale(1,0);
+	height: 0px;
 }
 
 .button {
