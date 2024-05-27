@@ -12,6 +12,7 @@ let numPredators = 0;
 let colors = ["red", "yellow", "green", "blue", "indigo", "violet"];
 let background_color = "#596781";
 let unicorn = false;
+let count_toggled = 0;
 
 //Birb parameters
 let max_speed = 10;
@@ -35,9 +36,10 @@ var globalFlock = [];
 var predator_pack = [];
 
 let musica = new Audio();
-musica.src = 'resources/music/unfamiliar_felineII.ogg'
+musica.src = 'resources/music/unfamiliar_felineIII.ogg'
 musica.volume = "0.01";
 musica.muted = true;
+musica.loop = true;
 
 //Menu functionality
 function setFlocking(value) {
@@ -94,6 +96,10 @@ function toggle_toolbar() {
         var content = rows[i];
         content.classList.toggle("active");
     }
+    count_toggled++;
+    if(count_toggled > 5) {
+        toggle_unicorn();
+    }
 }
 
 function toggle_unicorn() {
@@ -103,6 +109,7 @@ function toggle_unicorn() {
     } else {
         unicorn = true;
         musica.muted = false;
+        musica.play();
     }
 }
 
