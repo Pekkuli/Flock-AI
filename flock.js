@@ -97,7 +97,7 @@ function toggle_toolbar() {
         content.classList.toggle("active");
     }
     count_toggled++;
-    if(count_toggled > 5) {
+    if(count_toggled == 5) {
         toggle_unicorn();
     }
 }
